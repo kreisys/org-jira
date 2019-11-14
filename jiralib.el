@@ -386,7 +386,8 @@ request.el, so if at all possible, it should be avoided."
                                                               "/rest/api/2/search"
                                                               :type "POST"
                                                               :data (json-encode `((jql . ,(first params))
-                                                                                   (maxResults . ,(second params)))))))
+                                                                                   (maxResults . ,(second params))
+                                                                                   (expand . ("renderedFields")))))))
                                         nil))
       ('getPriorities (jiralib--rest-call-it
                        "/rest/api/2/priority"))
