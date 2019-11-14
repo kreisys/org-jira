@@ -148,7 +148,10 @@
      :components (mapconcat (lambda (c) (org-jira-sdk-path c '(name))) (path '(fields components)) ", ")
      :labels (mapconcat (lambda (c) (format "%s" c)) (map 'list #'identity (path '(fields labels))) ", ")
      :created (path '(fields created))     ; confirm
-     :description (or (path '(fields description)) "")
+     :description (let ((desc (or (path '(fields description)) "")))
+                    (if org-jira-convert-jira-markup-to-org
+                        (org-jira-conv-jira-to-org desc)
+                      desc))
      :duedate (path '(fields duedate))         ; confirm
      :filename (path '(fields project key))
      :headline (path '(fields summary)) ; Duplicate of summary, maybe different.

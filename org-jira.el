@@ -124,6 +124,7 @@
 (require 'dash)
 (require 'jiralib)
 (require 'org-jira-sdk)
+(require 'org-jira-conv)
 
 (defconst org-jira-version "4.3.1"
   "Current version of org-jira.el.")
@@ -312,6 +313,15 @@ See `org-default-priority' for more info."
   "A list of plists with :jql and :filename keys to run arbitrary user JQL."
   :group 'org-jira
   :type '(alist :value-type plist))
+
+(defcustom org-jira-convert-jira-markup-to-org nil
+  "Whether to convert jira markup fields to org-mode and back.
+
+Since the jira/confluence markup renderer isn't open source this
+is a bit hacky: we need `nodejs' to go from jira to markdown and
+back, and then we need `pandoc' to go from markdown to org-mode."
+  :group 'org-jira
+  :type 'boolean)
 
 (defvar org-jira-serv nil
   "Parameters of the currently selected blog.")
@@ -1139,7 +1149,7 @@ ORG-JIRA-PROJ-KEY-OVERRIDE being set before and after running."
                    ;;  Insert 2 spaces of indentation so Jira markup won't cause org-markup
                    (org-jira-insert
                     (replace-regexp-in-string
-                     "^" "  "
+                     "^" (if org-jira-convert-jira-markup-to-org "" "  ")
                      (format "%s" (slot-value Issue heading-entry)))))))
              '(description))
 
@@ -1776,7 +1786,11 @@ that should be bound to an issue."
            (org-goto-first-child)
            (forward-thing 'whitespace)
            (if (looking-at "description: ")
-               (org-trim (org-get-entry))
+               (let ((desc (org-trim (org-get-entry))))
+                 (if org-jira-convert-jira-markup-to-org
+                     (org-jira-conv-org-to-jira desc)
+                   desc))
+
              (error "Can not find description field for this issue")))
 
           ((eq key 'summary)
