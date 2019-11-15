@@ -1147,10 +1147,17 @@ ORG-JIRA-PROJ-KEY-OVERRIDE being set before and after running."
                      (org-jira-insert entry-heading "\n"))
 
                    ;;  Insert 2 spaces of indentation so Jira markup won't cause org-markup
-                   (org-jira-insert
-                    (replace-regexp-in-string
-                     "^" (if org-jira-convert-jira-markup-to-org "" "  ")
-                     (format "%s" (slot-value Issue heading-entry)))))))
+                   (let ((text (format "%s" (slot-value Issue heading-entry)))
+                         (level (org-current-level))
+                         (point (point)))
+
+                     (org-jira-insert text)
+
+                     (if org-jira-convert-jira-markup-to-org
+                         (progn
+                           (org-map-region (lambda () (dotimes (_ level) (org-demote))) point (point))
+                           (indent-region point (point)))
+                       (indent-region point (point) 2))))))
              '(description))
 
             (org-jira-update-comments-for-issue Issue)
@@ -1786,9 +1793,14 @@ that should be bound to an issue."
            (org-goto-first-child)
            (forward-thing 'whitespace)
            (if (looking-at "description: ")
-               (let ((desc (org-trim (org-get-entry))))
+               (let ((desc (org-trim (org-get-entry)))
+                     (level (org-current-level)))
                  (if org-jira-convert-jira-markup-to-org
-                     (org-jira-conv-org-to-jira desc)
+                     (org-jira-conv-org-to-jira
+                      (with-temp-buffer
+                        (insert desc)
+                        (org-map-region (lambda () (dotimes (_ level) (org-promote))) (point-min) (point-max))
+                        (buffer-string)))
                    desc))
 
              (error "Can not find description field for this issue")))
