@@ -1,5 +1,7 @@
 ;;; .local/straight/repos/org-jira/org-jira-conv.el -*- lexical-binding: t; -*-
 
+(require 'ox-jira-monkeypatch)
+
 (let* ((this-file (or load-file-name buffer-file-name))
        (this-dir (file-name-directory this-file)))
 
@@ -10,30 +12,25 @@
             (apply 'call-process-region (point-min) (point-max) cmd t t nil args)
             (buffer-substring-no-properties (point-min) (point-max))))
 
-       (jira->md (body)
+       (jira->gfm (body)
+                  (-> body
+                      (| "node"
+                         (expand-file-name "jira-to-gfm.js" this-dir))))
+
+       (gfm->org (body)
                  (-> body
-                     (| "node"
-                        (expand-file-name "to-md.js" this-dir))))
+                     (| "pandoc"
+                        "-f" "gfm"
+                        "-t" "org")))
 
-       (md->org (body)
-                (-> body
-                    (| "pandoc"
-                       "-f" "gfm"
-                       "-t" "org")))
-
-       (jira->org (body) (-> body jira->md md->org))
-
-       (md->jira (body)
-                 (-> body
-                     (| "node"
-                        (expand-file-name "to-jr.js" this-dir))))
+       (jira->org (body) (-> body jira->gfm gfm->org))
 
        (org->jira (body)
                   (let ((org-export-show-temporary-export-buffer nil))
                     (with-temp-buffer
                       (insert body)
                       (with-current-buffer
-                          (org-confluence-export-as-confluence nil nil nil t)
+                          (ox-jira-export-as-jira)
                         (buffer-substring-no-properties (point-min) (point-max))))))
 
        ;; (org->jira (body) (-> body org->md md->jira))
@@ -45,22 +42,5 @@
 
     (defalias 'org-jira-conv-org-to-jira #'org->jira
       "Convert `BODY' from org-mode to JIRA markup.")))
-
-;; (let (
-;;       (txt "
-;; #+BEGIN_SRC bash
-;; echo hi
-;; #+END_SRC
-;; "))
-
-;;   (org->jira txt))
-
-;; (defun org->jira (body)
-;;   (let ((org-export-show-temporary-export-buffer nil))
-;;     (with-temp-buffer
-;;       (insert body)
-;;       (with-current-buffer
-;;           (org-confluence-export-as-confluence)
-;;         (buffer-substring-no-properties (point-min) (point-max))))))
 
 (provide 'org-jira-conv)
