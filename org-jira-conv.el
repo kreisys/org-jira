@@ -28,29 +28,39 @@
                      (| "node"
                         (expand-file-name "to-jr.js" this-dir))))
 
-       (org->md (body)
-                (-> body
-                    (| "pandoc"
-                       "-f" "org"
-                       "-t" "gfm")))
+       (org->jira (body)
+                  (let ((org-export-show-temporary-export-buffer nil))
+                    (with-temp-buffer
+                      (insert body)
+                      (with-current-buffer
+                          (org-confluence-export-as-confluence nil nil t t)
+                        (buffer-substring-no-properties (point-min) (point-max))))))
 
-       (org->jira (body) (-> body org->md md->jira)))
+       ;; (org->jira (body) (-> body org->md md->jira))
+       )
 
-    ;; (defalias 'org-jira-conv-org-to-md #'org->md)
+    (defalias 'org-jira-conv-org-to-md #'org->md)
     (defalias 'org-jira-conv-jira-to-org #'jira->org
       "Convert `BODY' from JIRA markup to org-mode.")
 
     (defalias 'org-jira-conv-org-to-jira #'org->jira
       "Convert `BODY' from org-mode to JIRA markup.")))
 
-;; (let ((txt "
-;; *** description
-;; **** Docker Registry
-;; :PROPERTIES:
-;; :CUSTOM_ID: docker-registry
-;; :END:
+;; (let (
+;;       (txt "
+;; #+BEGIN_SRC bash
+;; echo hi
+;; #+END_SRC
 ;; "))
 
-;;   (org-jira-conv-org-to-md txt))
+;;   (org->jira txt))
+
+;; (defun org->jira (body)
+;;   (let ((org-export-show-temporary-export-buffer nil))
+;;     (with-temp-buffer
+;;       (insert body)
+;;       (with-current-buffer
+;;           (org-confluence-export-as-confluence)
+;;         (buffer-substring-no-properties (point-min) (point-max))))))
 
 (provide 'org-jira-conv)
