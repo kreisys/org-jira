@@ -57,7 +57,7 @@ const getStdin = () => {
     // Strikethrough
         .replace(/(\s+)-(\S+.*?\S)-(\s+)/g, '$1~~$2~~$3')
     // Code Block
-        .replace(/\{code(:([a-z]+))?([:|]?(title|borderStyle|borderColor|borderWidth|bgColor|titleBGColor)=.+?)*\}([^]*)\{code\}/gm, '```$2$5```')
+        .replace(/\{code(:([a-z]+))?([:|]?(title|borderStyle|borderColor|borderWidth|bgColor|collapse|language|titleBGColor)=.+?)*\}([^]*)\{code\}/gm, '```$2$5```')
     // Pre-formatted text
         .replace(/{noformat}/g, '```')
     // Un-named Links
