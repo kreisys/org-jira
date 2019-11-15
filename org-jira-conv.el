@@ -33,7 +33,7 @@
                     (with-temp-buffer
                       (insert body)
                       (with-current-buffer
-                          (org-confluence-export-as-confluence nil nil t t)
+                          (org-confluence-export-as-confluence nil nil nil t)
                         (buffer-substring-no-properties (point-min) (point-max))))))
 
        ;; (org->jira (body) (-> body org->md md->jira))
